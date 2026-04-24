@@ -1,70 +1,252 @@
-# Getting Started with Create React App
+# TP 8 : Consommer une API avec Fetch et Axios dans React
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+# Objectif
 
-In the project directory, you can run:
+Dans ce TP, vous allez apprendre à :
 
-### `npm start`
+- Consommer une API REST avec `fetch()`
+- Consommer une API avec `axios`
+- Gérer les états : loading, error, success
+- Afficher des données dynamiques dans React
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+# Étape 1 – Préparer le projet
 
-### `npm test`
+Si nécessaire :
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npx create-react-app tp-api-react
+cd tp-api-react
+npm start
+```
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Étape 2 – Installer Axios
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm install axios
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+# Étape 3 – Créer un composant avec `fetch()`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Objectif
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Ce composant va :
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- Charger des articles depuis une API
+- Afficher "Chargement..." pendant la requête
+- Afficher une liste de titres
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Créer `FetchData.js`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Dans `src/`, créer le fichier :
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```javascript
+import { useState, useEffect } from 'react';
 
-### Code Splitting
+function FetchData() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+  useEffect(() => {
+    fetch(
+      'https://jsonplaceholder.typicode.com/posts'
+    )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Erreur réseau');
+        }
+        return response.json();
+      })
+      .then((data) => setPosts(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
-### Analyzing the Bundle Size
+  if (loading)
+    return <p>Chargement en cours...</p>;
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+  if (error)
+    return <p>Erreur : {error}</p>;
 
-### Making a Progressive Web App
+  return (
+    <div>
+      <h2>
+        Articles chargés avec fetch()
+      </h2>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+      <ul>
+        {posts
+          .slice(0, 5)
+          .map((post) => (
+            <li key={post.id}>
+              {post.title}
+            </li>
+          ))}
+      </ul>
+    </div>
+  );
+}
 
-### Advanced Configuration
+export default FetchData;
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## Explication
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- `useEffect([])` → exécution une seule fois
+- `fetch()` → appel API natif JavaScript
+- `loading` → état de chargement
+- `error` → gestion des erreurs
+- `slice(0,5)` → afficher seulement 5 éléments
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# Étape 4 – Créer un composant avec Axios
+
+## Créer `AxiosData.js`
+
+```javascript
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function AxiosData() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get(
+        'https://jsonplaceholder.typicode.com/users'
+      )
+      .then((response) =>
+        setUsers(response.data)
+      )
+      .catch((err) =>
+        setError(err.message)
+      )
+      .finally(() =>
+        setLoading(false)
+      );
+  }, []);
+
+  if (loading)
+    return <p>Chargement en cours...</p>;
+
+  if (error)
+    return <p>Erreur : {error}</p>;
+
+  return (
+    <div>
+      <h2>
+        Utilisateurs chargés avec axios
+      </h2>
+
+      <ul>
+        {users.map((user) => (
+          <li key={user.id}>
+            {user.name} – {user.email}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default AxiosData;
+```
+
+---
+
+## Explication
+
+- Axios simplifie les requêtes HTTP
+- `response.data` contient directement les données
+- Même logique : loading / error / success
+
+---
+
+# Étape 5 – Afficher les deux composants dans `App.js`
+
+Remplacer `src/App.js` par :
+
+```javascript
+import FetchData from './FetchData';
+import AxiosData from './AxiosData';
+
+function App() {
+  return (
+    <div>
+      <h1>
+        TP – Consommer une API avec React
+      </h1>
+
+      <FetchData />
+
+      <AxiosData />
+    </div>
+  );
+}
+
+export default App;
+```
+
+---
+
+# Résultat attendu
+
+L’application doit afficher :
+
+✔ Une liste d’articles (fetch)  
+✔ Une liste d’utilisateurs (axios)  
+✔ Un message de chargement  
+✔ Gestion des erreurs  
+
+---
+
+# Concepts appris
+
+- `fetch()` API native
+- `axios` (alternative moderne)
+- `useEffect` pour les appels API
+- `useState` pour gérer les données
+- gestion des états asynchrones
+  - loading
+  - error
+  - success
+
+---
+
+# Lancer le projet
+
+```bash
+npm start
+```
+
+---
+
+# Bonus (bonnes pratiques)
+
+✔ Toujours gérer `loading`  
+✔ Toujours gérer `error`  
+✔ Limiter les données affichées (`slice`)  
+✔ Séparer les composants API  
+
+---
+
+# Fin du TP
+
+Vous savez maintenant consommer des APIs REST dans React avec deux approches professionnelles :
+- Fetch natif
+- Axios
