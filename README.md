@@ -233,6 +233,7 @@ L’application doit afficher :
 ```bash
 npm start
 ```
+<img width="1920" height="950" alt="image" src="https://github.com/user-attachments/assets/66f76bab-19c8-48c9-a512-899c3575d447" />
 
 ---
 
